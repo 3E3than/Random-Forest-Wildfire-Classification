@@ -4,6 +4,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
+import joblib
+import os
 
 def optimize_random_forest(X, y, test_size=0.2):
     """
@@ -18,6 +20,9 @@ def optimize_random_forest(X, y, test_size=0.2):
     best_model: Optimized Random Forest model
     scaler: Fitted StandardScaler
     """
+
+    os.makedirs('models', exist_ok=True)
+
     # Split data first
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=42, stratify=y
@@ -58,6 +63,16 @@ def optimize_random_forest(X, y, test_size=0.2):
     
     # Get best model
     best_model = grid_search.best_estimator_
+
+    # Save model and scaler
+    model_path = os.path.join('models', 'random_forest_model.joblib')
+    scaler_path = os.path.join('models', 'scaler.joblib')
+    
+    joblib.dump(best_model, model_path)
+    joblib.dump(scaler, scaler_path)
+    
+    print(f"Model saved to {model_path}")
+    print(f"Scaler saved to {scaler_path}")
     
     # Print comprehensive results
     print("\nBest parameters:", grid_search.best_params_)
@@ -91,9 +106,19 @@ def optimize_random_forest(X, y, test_size=0.2):
 model, scaler = optimize_random_forest(X, y)
 
 # To make predictions on new data:
-X_new_scaled = scaler.transform(X_new)
-predictions = model.predict(X_new_scaled)
+data = request.get_json()
+    features = [
+        float(data['feature1']),
+        float(data['feature2']),
+        float(data['feature3'])
+        ]
+        # Scale and predict
+        scaled_features = scaler.transform(np.array(features).reshape(1, -1))
+        prediction = model.predict(scaled_features)[0]
+        probability = model.predict_proba(scaled_features)[0].max()
+
 """
+
 data = pd.read_csv('WildFires_DataSet.csv')
 X = data[['NDVI', 'LST', 'BURNED_AREA']]
 y = data['CLASS']
