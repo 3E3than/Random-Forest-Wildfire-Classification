@@ -74,27 +74,27 @@ def optimize_random_forest(X, y, test_size=0.2):
     print(f"Model saved to {model_path}")
     print(f"Scaler saved to {scaler_path}")
     
-    # Print comprehensive results
+    # RESULTS
     print("\nBest parameters:", grid_search.best_params_)
     print("Best cross-validation score:", grid_search.best_score_)
     
-    # Calculate and print train accuracy
+    #ACCURACY DURING TRAINING
     train_pred = best_model.predict(X_train_scaled)
     train_accuracy = accuracy_score(y_train, train_pred)
     print(f"\nTrain Accuracy: {train_accuracy:.4f}")
     
-    # Calculate and print test accuracy
+    #ACCURACY TESTS
     test_pred = best_model.predict(X_test_scaled)
     test_accuracy = accuracy_score(y_test, test_pred)
     print(f"Test Accuracy: {test_accuracy:.4f}")
     
-    # Print feature importance
+    #FEATURE IMPORTANCE
     importance = best_model.feature_importances_
     print("\nFeature Importances:")
     for i, imp in enumerate(importance):
         print(f"Feature {i+1}: {imp:.4f}")
     
-    # Print detailed classification report
+    #CLASSIFICATION REPORT
     print("\nClassification Report on Test Set:")
     print(classification_report(y_test, test_pred))
     
@@ -119,7 +119,19 @@ data = request.get_json()
 
 """
 
+
+
+#Load data and run the model trainer
 data = pd.read_csv('WildFires_DataSet.csv')
 X = data[['NDVI', 'LST', 'BURNED_AREA']]
 y = data['CLASS']
 model, scaler = optimize_random_forest(X, y)
+
+# Example usage in app
+xdata = [[1, 2, 3]]
+loadedModel = joblib.load("models/random_forest_model.joblib")
+loadedScaler = joblib.load("models/scaler.joblib")
+scaledX = loadedScaler.transform(xdata)
+prediction = loadedModel.predict(scaledX)
+print("TEST PREDICTION")
+print(prediction)
