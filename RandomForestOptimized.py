@@ -100,7 +100,9 @@ def optimize_random_forest(X, y, test_size=0.2):
     
     return best_model, scaler
 
-# Example usage
+
+
+
 """
 # Assuming your data is in X and y
 model, scaler = optimize_random_forest(X, y)
@@ -118,9 +120,6 @@ data = request.get_json()
         probability = model.predict_proba(scaled_features)[0].max()
 
 """
-
-
-
 #Load data and run the model trainer
 data = pd.read_csv('WildFires_DataSet.csv')
 X = data[['NDVI', 'LST', 'BURNED_AREA']]
