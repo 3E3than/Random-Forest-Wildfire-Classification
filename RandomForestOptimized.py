@@ -44,8 +44,8 @@ def optimize_random_forest(X, y, test_size=0.2):
     # Create and train model
     rf = RandomForestClassifier(
         random_state=42,
-        n_jobs=-1,  # Use all CPU cores
-        class_weight='balanced'  # Handle any class imbalance
+        n_jobs=-1,
+        class_weight='balanced'
     )
     
     grid_search = GridSearchCV(
