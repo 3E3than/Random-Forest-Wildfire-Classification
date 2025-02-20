@@ -1,10 +1,8 @@
 import ee
 from geopy.geocoders import Nominatim
+from datetime import date, timedelta
 
-
-ee.Authenticate()
-ee.Initialize(project='ee-cethan12022')
-
+#function that gets the coordinates for city, countrycode
 def get_city_bounds(city_name, country_code=None):
     geolocator = Nominatim(user_agent="geo_bounds_finder")
     location = geolocator.geocode(city_name if not country_code else f"{city_name}, {country_code}", exactly_one=True)
@@ -12,52 +10,64 @@ def get_city_bounds(city_name, country_code=None):
     if location and "boundingbox" in location.raw:
         min_lat, max_lat, min_lon, max_lon = map(float, location.raw["boundingbox"])
         return {
-            "min_latitude": min_lat,
-            "max_latitude": max_lat,
-            "min_longitude": min_lon,
-            "max_longitude": max_lon
+            "minlat": min_lat,
+            "maxlat": max_lat,
+            "minlong": min_lon,
+            "maxlong": max_lon
         }
 
     return None
 
-# Example Usage
-city_bounds = get_city_bounds("San Francisco", "US")
-print(city_bounds)
+#ENTER CITY AND COUNTRY TO SEARCH HERE
+city = "san francisco"
+countryCode = "US"
+city_bounds = get_city_bounds(city, countryCode)
 
+#initialize and authenticate google earth engine
+ee.Authenticate()
+ee.Initialize(project='ee-cethan12022')
+
+#get date and city
+today_ = date.today() - timedelta(days = 1)
+prevWeek_ = today_ - timedelta(days=14)
+prevMonth_ = today_ - timedelta(days=45)
+today = ee.Date(str(today_))
+prevWeek = ee.Date(str(prevWeek_))
+prevMonth = ee.Date(str(prevMonth_))
 
 #Example: California; function takes in coords as
-#a list of four numbers in the order xMin, yMin, xMax, yMax.
-AREA = ee.Geometry.Rectangle([-125, 32, -113, 42])
+#a list of four numbers in the order mlong, mlat, maxlong, maxlat.
+AREA = ee.Geometry.Rectangle([city_bounds['minlong'], city_bounds['minlat'], city_bounds['maxlong'], city_bounds['maxlat']])
 
-#NDVI
+#NDVI get monthly
 ndvi_dataset = ee.ImageCollection("MODIS/061/MOD13Q1") \
-    .filterDate('2024-01-01', '2024-02-01') \
+    .filterDate(prevMonth, prevWeek) \
     .select('NDVI')
 # Scale the NDVI values to be between 0 and 1 (divide by 10000)
 scaled_ndvi_dataset = ndvi_dataset.map(lambda image: image.divide(10000))
 
-#LST
+#LST get weekly
 lst_dataset = ee.ImageCollection("MODIS/061/MOD11A1") \
-    .filterDate('2024-01-01', '2024-02-01') \
+    .filterDate(prevWeek, today) \
     .select('LST_Day_1km')
 
-#BURNED_AREA
+#BURNED_AREA get weekly
 burned_area_dataset = ee.ImageCollection("MODIS/061/MOD14A1") \
-    .filterDate('2024-01-01', '2024-02-01') \
+    .filterDate(prevWeek, today) \
     .select('FireMask')
 
-# Get the mean NDVI for the time range over the AREA
+
+
+'''
+maxPixels is high to ensure full coverage if AREA is large
+A higher scale(in meters) means lower resolution, but faster processing.
+'''
 ndvi_mean = scaled_ndvi_dataset.mean().reduceRegion(
     reducer=ee.Reducer.mean(),
     geometry=AREA,
     scale=250,
     maxPixels=1e13
 )
-
-'''
-maxPixels is high to ensure full coverage if AREA is large
-A higher scale(in meters) means lower resolution, but faster processing.
-'''
 
 lst_mean = lst_dataset.mean().reduceRegion(
     reducer=ee.Reducer.mean(),
@@ -80,6 +90,10 @@ burned_area_mean_info = burned_area_mean.getInfo()
 
 # Prepare the data to be written into a text file
 output_data = f"""
+Location: {city}, {countryCode}
+Coords: {city_bounds}
+dates: {today_} - {prevWeek_}
+
 NDVI:
 {ndvi_mean_info}
 

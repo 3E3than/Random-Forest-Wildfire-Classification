@@ -1,9 +1,13 @@
 
+Location: san francisco, US
+Coords: {'minlat': 37.6403143, 'maxlat': 37.929811, 'minlong': -123.173825, 'maxlong': -122.281479}
+dates: 2025-02-18 - 2025-02-04
+
 NDVI:
-{'NDVI': 0.2779733293732379}
+{'NDVI': 0.44817658521619164}
 
 LST:
-{'LST_Day_1km': 14017.64865055326}
+{'LST_Day_1km': 14163.462572510158}
 
 Burned Area:
-{'FireMask': 4.233785630453613}
+{'FireMask': 3.3878850612988356}
