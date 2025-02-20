@@ -1,9 +1,32 @@
 import ee
+from geopy.geocoders import Nominatim
+
+
 ee.Authenticate()
 ee.Initialize(project='ee-cethan12022')
 
+def get_city_bounds(city_name, country_code=None):
+    geolocator = Nominatim(user_agent="geo_bounds_finder")
+    location = geolocator.geocode(city_name if not country_code else f"{city_name}, {country_code}", exactly_one=True)
+
+    if location and "boundingbox" in location.raw:
+        min_lat, max_lat, min_lon, max_lon = map(float, location.raw["boundingbox"])
+        return {
+            "min_latitude": min_lat,
+            "max_latitude": max_lat,
+            "min_longitude": min_lon,
+            "max_longitude": max_lon
+        }
+
+    return None
+
+# Example Usage
+city_bounds = get_city_bounds("San Francisco", "US")
+print(city_bounds)
+
+
 #Example: California; function takes in coords as
-# a list of four numbers in the order xMin, yMin, xMax, yMax.
+#a list of four numbers in the order xMin, yMin, xMax, yMax.
 AREA = ee.Geometry.Rectangle([-125, 32, -113, 42])
 
 #NDVI
