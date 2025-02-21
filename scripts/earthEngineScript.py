@@ -1,4 +1,6 @@
 import ee
+import joblib
+import numpy as np
 from geopy.geocoders import Nominatim
 from datetime import date, timedelta
 
@@ -17,6 +19,7 @@ def get_city_bounds(city_name, country_code=None):
         }
 
     return None
+
 
 #ENTER CITY AND COUNTRY TO SEARCH HERE
 city = "san francisco"
@@ -56,8 +59,6 @@ burned_area_dataset = ee.ImageCollection("MODIS/061/MOD14A1") \
     .filterDate(prevWeek, today) \
     .select('FireMask')
 
-
-
 '''
 maxPixels is high to ensure full coverage if AREA is large
 A higher scale(in meters) means lower resolution, but faster processing.
@@ -83,25 +84,31 @@ burned_area_mean = burned_area_dataset.mean().reduceRegion(
     maxPixels=1e13
 )
 
+
+
 # fetches info
-ndvi_mean_info = ndvi_mean.getInfo()
-lst_mean_info = lst_mean.getInfo()
-burned_area_mean_info = burned_area_mean.getInfo()
+finalNDVI = list(ndvi_mean.getInfo().values())[0]
+finalLST = list(lst_mean.getInfo().values())[0]
+finalBURNED = list(burned_area_mean.getInfo().values())[0]
+
+model, scaler = joblib.load("models/random_forest_model.joblib"), joblib.load("models/scaler.joblib")
+X = np.array([[finalNDVI, finalLST, finalBURNED]])
+scaledX = scaler.transform(X)
+prediction = model.predict(scaledX)[0]
+probability = model.predict_proba(scaledX)[0].max()
 
 # Prepare the data to be written into a text file
 output_data = f"""
 Location: {city}, {countryCode}
 Coords: {city_bounds}
 dates: {today_} - {prevWeek_}
-
 NDVI:
-{ndvi_mean_info}
-
+{finalNDVI}
 LST:
-{lst_mean_info}
-
+{finalLST}
 Burned Area:
-{burned_area_mean_info}
+{finalBURNED}
+Prediction: {prediction} with probability {probability}
 """
 
 # Write the data to a text file

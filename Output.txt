@@ -1,0 +1,7 @@
+
+Location: San Francisco, US
+NDVI: 0.4247240564636009
+LST: 14162.117158160809
+Burned Area: 3.417605786205607
+Prediction: No Fire Risk
+Confidence: 98.00%

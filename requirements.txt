@@ -1,0 +1,6 @@
+ee
+geopy
+numpy
+pandas
+scikit-learn
+joblib
